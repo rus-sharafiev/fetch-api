@@ -1,0 +1,13 @@
+{
+    "compilerOptions": {
+        "forceConsistentCasingInFileNames": true,
+        "strict": true,
+        "allowJs": true,
+        "declaration": true,
+        "target": "ES2022",
+        "lib": [
+            "ES2015",
+            "DOM"
+        ]
+    }
+}

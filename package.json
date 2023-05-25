@@ -1,0 +1,15 @@
+{
+  "name": "fwr",
+  "version": "1.0.0",
+  "description": "Fetch with access token refresh",
+  "main": "src/index.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "fetch",
+    "refresh token"
+  ],
+  "author": "Rus Sharafiev <srr@live.ru>",
+  "license": "ISC"
+}
