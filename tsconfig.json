@@ -1,6 +1,7 @@
 {
     "compilerOptions": {
         "forceConsistentCasingInFileNames": true,
+        "moduleResolution": "nodenext",
         "strict": true,
         "allowJs": true,
         "declaration": true,

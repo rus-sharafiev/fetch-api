@@ -10,7 +10,7 @@ const defaultOptions: RequestInit = {
  * 
  * @author Rus Sharafiev
  */
-export class Fwr {
+export class FetchApi {
 
     /**
      * A simple wrapper around the Fetch API with build in access token refresh on 401 response status.
@@ -53,7 +53,7 @@ export class Fwr {
      * @param   Object with `url` and `RequestInit` options
      * @returns Promise which resolves with the result of parsing the body text as JSON
      */
-    async fetch({ url, method = 'GET', body, refresh = true, ...args }: FwrArgs): Promise<unknown> {
+    async fetch({ url, method = 'GET', body, refresh = true, ...args }: FetchApiArgs): Promise<unknown> {
 
         if (body instanceof FormData)
             this.headers.delete("Content-Type")
@@ -138,7 +138,7 @@ export class Fwr {
      * @param   res     Responce with error
      * @returns Error object with response status and resolved error message from server
      */
-    private async error(res: Response): Promise<FwrError> {
+    private async error(res: Response): Promise<FetchApiError> {
         let err = await res.json()
         throw {
             status: res.status,
@@ -208,29 +208,29 @@ export class Fwr {
      * @param args `baseQuery` args
      * @returns `FetchBaseQueryResult`
      */
-    baseQuery: BaseQueryFn<FwrArgs, unknown, FwrError> = async (args) => {
+    baseQuery: BaseQueryFn<FetchApiArgs, unknown, FetchApiError> = async (args) => {
         try {
             const result = await this.fetch(args)
             return { data: result }
         } catch (e) {
-            const error = e as FwrError
+            const error = e as FetchApiError
             return { error }
         }
     }
 }
 
-export default Fwr
+export default FetchApi
 
 // Types --------------------------------------------------------------------------
 
 // fwr
-export interface FwrError {
+export interface FetchApiError {
     status: number,
     message: string
     errors?: object
 }
 
-export interface FwrArgs {
+export interface FetchApiArgs {
     url: string,
     method?: 'GET' | 'POST' | 'PATCH' | 'DELETE',
     body?: unknown

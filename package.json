@@ -1,8 +1,8 @@
 {
-  "name": "fwr",
+  "name": "@russh/fetch-api",
   "version": "1.0.0",
   "description": "Fetch with access token refresh",
-  "main": "src/index.ts",
+  "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -14,10 +14,10 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/rus-sharafiev/fwr.git"
+    "url": "git+https://github.com/rus-sharafiev/fetch-api.git"
   },
   "bugs": {
-    "url": "https://github.com/rus-sharafiev/fwr/issues"
+    "url": "https://github.com/rus-sharafiev/fetch-api/issues"
   },
-  "homepage": "https://github.com/rus-sharafiev/fwr#readme"
+  "homepage": "https://github.com/rus-sharafiev/fetch-api#readme"
 }
