@@ -11,5 +11,13 @@
     "refresh token"
   ],
   "author": "Rus Sharafiev <srr@live.ru>",
-  "license": "ISC"
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rus-sharafiev/fwr.git"
+  },
+  "bugs": {
+    "url": "https://github.com/rus-sharafiev/fwr/issues"
+  },
+  "homepage": "https://github.com/rus-sharafiev/fwr#readme"
 }

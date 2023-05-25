@@ -6,14 +6,14 @@ const defaultOptions: RequestInit = {
 }
 
 /**
- * A custom wrapper around the Fetch API
+ * A simple wrapper around the Fetch API
  * 
  * @author Rus Sharafiev
  */
 export class Fwr {
 
     /**
-     * A custom wrapper around the Fetch API with build in access token refresh on 401 response status.
+     * A simple wrapper around the Fetch API with build in access token refresh on 401 response status.
      * 
      * @param   baseUrl Base URL 
      * @param   tokenSource A function that returns Promise which resolves with access token, or url path to fetch it
