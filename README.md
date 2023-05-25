@@ -6,7 +6,7 @@ A simple wrapper around the Fetch API with build in access token refresh on 401 
 
 First create an instance of the Fwr class with a base URL and optionally a path name to refresh the access token.
 ```ts
-const api = new Fwr('https://example.com', '/refresh-token')
+const api = new FetchApi('https://example.com', '/refresh-token')
 ```
 Then use full declaration...
 ```ts
