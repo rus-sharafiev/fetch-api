@@ -32,13 +32,15 @@ export class FetchApi {
         tokenSource?: (() => Promise<AccessTokenPayload>) | string,
         options?: {
             headers?: HeadersInit,
-            options?: RequestInit
+            options?: RequestInit,
+            convertToFormdata: boolean
         }
     ) {
         this.baseUrl = baseUrl
         this.tokenSource = tokenSource ?? undefined
         this.headers = new Headers(options?.headers)
         this.options = { headers: this.headers, ...options?.options } ?? { headers: this.headers, ...defaultOptions }
+        this.convertToFormdata = (!!options && 'convertToFormdata' in options) ? options.convertToFormdata : false
     }
 
     private baseUrl: string
@@ -46,6 +48,7 @@ export class FetchApi {
 
     private headers: Headers
     private options: RequestInit
+    private convertToFormdata: boolean
 
     /**
      * Use object with args to fetch query
@@ -55,10 +58,25 @@ export class FetchApi {
      */
     async fetch({ url, method = 'GET', body, refresh = true, ...args }: FetchApiArgs): Promise<unknown> {
 
-        if (body instanceof FormData)
-            this.headers.delete("Content-Type")
-        else
-            this.headers.set("Content-Type", "application/json")
+        if (this.convertToFormdata) {
+
+            const data = body as { [i: string]: unknown }
+            const hasFile = Object.values(data).find(el => el instanceof File)
+
+            if (hasFile) {
+                body = this.toFormData(data)
+                this.headers.delete("Content-Type")
+            } else {
+                this.headers.set("Content-Type", "application/json")
+            }
+
+        } else {
+            // Remove Content-Type header if body is FormData
+            if (body instanceof FormData)
+                this.headers.delete("Content-Type")
+            else
+                this.headers.set("Content-Type", "application/json")
+        }
 
         if (method === 'PATCH' || method === 'POST')
             args = { ...args, method, body: body instanceof FormData ? body : JSON.stringify(body ?? {}) }
@@ -216,6 +234,45 @@ export class FetchApi {
             const error = e as FetchApiError
             return { error }
         }
+    }
+
+    /**
+     * Method converts JSON object with files to `FormData` with files and `serialized-json` field with the rest object
+     * 
+     * @param data JSON object
+     * @returns FormData
+     */
+    private toFormData(data: { [i: string]: unknown }): FormData {
+
+        const formDataWithFiles = new FormData()
+        let jsonData = {}
+
+        for (const key in data) {
+
+            if (data[key] instanceof File) {
+                formDataWithFiles.append(key, data[key] as Blob)
+
+            } else if (data[key] instanceof FileList) {
+                const fileList = data[key] as FileList
+                Array.from(fileList).forEach((file) => formDataWithFiles.append(key, file as Blob))
+
+            } else if (data[key] instanceof Array) {
+                const arr = data[key] as Array<unknown>
+
+                const hasFile = arr.find(el => el instanceof File)
+                if (hasFile) arr.forEach((file) => formDataWithFiles.append(key, file as Blob))
+                else jsonData = { ...jsonData, [key]: data[key] }
+
+            } else {
+                jsonData = { ...jsonData, [key]: data[key] }
+            }
+        }
+
+        const formData = new FormData()
+        formData.append('serialized-json', JSON.stringify(jsonData))
+        formDataWithFiles.forEach((value, key) => formData.append(key, value))
+
+        return formData
     }
 }
 
