@@ -33,14 +33,14 @@ export class FetchApi {
         options?: {
             headers?: HeadersInit,
             options?: RequestInit,
-            convertToFormdata: boolean
+            convertToFormData: boolean
         }
     ) {
         this.baseUrl = baseUrl
         this.tokenSource = tokenSource ?? undefined
         this.headers = new Headers(options?.headers)
         this.options = { headers: this.headers, ...options?.options } ?? { headers: this.headers, ...defaultOptions }
-        this.convertToFormdata = (!!options && 'convertToFormdata' in options) ? options.convertToFormdata : false
+        this.convertToFormData = (!!options && 'convertToFormData' in options) ? options.convertToFormData : true
     }
 
     private baseUrl: string
@@ -48,7 +48,7 @@ export class FetchApi {
 
     private headers: Headers
     private options: RequestInit
-    private convertToFormdata: boolean
+    private convertToFormData: boolean
 
     /**
      * Use object with args to fetch query
@@ -58,8 +58,9 @@ export class FetchApi {
      */
     async fetch({ url, method = 'GET', body, refresh = true, ...args }: FetchApiArgs): Promise<unknown> {
 
-        if (this.convertToFormdata) {
+        if (body && this.convertToFormData) {
 
+            // Check whether body has files and convert to formdata if it is 
             const data = body as { [i: string]: unknown }
             const hasFile = Object.values(data).find(el => el instanceof File)
 
@@ -71,6 +72,7 @@ export class FetchApi {
             }
 
         } else {
+
             // Remove Content-Type header if body is FormData
             if (body instanceof FormData)
                 this.headers.delete("Content-Type")
@@ -88,12 +90,12 @@ export class FetchApi {
         }
 
         if (response.status === 401 && refresh) {
-            if (this.tokenSource)
-                return this.refreshToken(url, method ?? 'GET', body)
+            return this.refreshToken(response, url, method ?? 'GET', body)
         }
 
         return this.error(response)
     }
+
 
     /**
      * Request interceptor with token update function
@@ -103,7 +105,7 @@ export class FetchApi {
      * @param   payload Original payload
      * @returns Original request
      */
-    private async refreshToken(url: string, method: 'GET' | 'POST' | 'PATCH' | 'DELETE', body?: unknown) {
+    private async refreshToken(response: Response, url: string, method: 'GET' | 'POST' | 'PATCH' | 'DELETE', body?: unknown) {
         if (this.tokenSource) {
 
             let token: AccessTokenPayload | undefined = undefined
@@ -114,7 +116,7 @@ export class FetchApi {
                 else
                     token = await this.tokenSource() as AccessTokenPayload
             } catch (e) {
-                throw { message: 'Failed to get token' }
+                return this.error(response)
             }
 
             if (token) {
@@ -126,7 +128,7 @@ export class FetchApi {
 
         } else {
             localStorage.removeItem('accessToken')
-            throw { message: 'Failed to refresh token' }
+            return this.error(response)
         }
     }
 
@@ -165,6 +167,44 @@ export class FetchApi {
         }
     }
 
+    /**
+     * Method converts JSON object with files to `FormData` with files and `serialized-json` field with the rest object
+     * 
+     * @param data JSON object
+     * @returns FormData
+     */
+    private toFormData(data: { [i: string]: unknown }): FormData {
+
+        const formDataWithFiles = new FormData()
+        let jsonData = {}
+
+        for (const key in data) {
+
+            if (data[key] instanceof File) {
+                formDataWithFiles.append(key, data[key] as Blob)
+
+            } else if (data[key] instanceof FileList) {
+                const fileList = data[key] as FileList
+                Array.from(fileList).forEach((file) => formDataWithFiles.append(key, file as Blob))
+
+            } else if (data[key] instanceof Array) {
+                const arr = data[key] as Array<unknown>
+
+                const hasFile = arr.find(el => el instanceof File)
+                if (hasFile) arr.forEach((file) => formDataWithFiles.append(key, file as Blob))
+                else jsonData = { ...jsonData, [key]: data[key] }
+
+            } else {
+                jsonData = { ...jsonData, [key]: data[key] }
+            }
+        }
+
+        const formData = new FormData()
+        formData.append('serialized-json', JSON.stringify(jsonData))
+        formDataWithFiles.forEach((value, key) => formData.append(key, value))
+
+        return formData
+    }
 
     // --------------- Shorthands --------------------------------------------------------------------
 
@@ -220,6 +260,8 @@ export class FetchApi {
         })
     }
 
+    // --------------- RTK baseQuery -----------------------------------------------------------------
+
     /**
      * fwr-based `baseQuery` utility
      * 
@@ -234,45 +276,6 @@ export class FetchApi {
             const error = e as FetchApiError
             return { error }
         }
-    }
-
-    /**
-     * Method converts JSON object with files to `FormData` with files and `serialized-json` field with the rest object
-     * 
-     * @param data JSON object
-     * @returns FormData
-     */
-    private toFormData(data: { [i: string]: unknown }): FormData {
-
-        const formDataWithFiles = new FormData()
-        let jsonData = {}
-
-        for (const key in data) {
-
-            if (data[key] instanceof File) {
-                formDataWithFiles.append(key, data[key] as Blob)
-
-            } else if (data[key] instanceof FileList) {
-                const fileList = data[key] as FileList
-                Array.from(fileList).forEach((file) => formDataWithFiles.append(key, file as Blob))
-
-            } else if (data[key] instanceof Array) {
-                const arr = data[key] as Array<unknown>
-
-                const hasFile = arr.find(el => el instanceof File)
-                if (hasFile) arr.forEach((file) => formDataWithFiles.append(key, file as Blob))
-                else jsonData = { ...jsonData, [key]: data[key] }
-
-            } else {
-                jsonData = { ...jsonData, [key]: data[key] }
-            }
-        }
-
-        const formData = new FormData()
-        formData.append('serialized-json', JSON.stringify(jsonData))
-        formDataWithFiles.forEach((value, key) => formData.append(key, value))
-
-        return formData
     }
 }
 
