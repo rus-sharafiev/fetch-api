@@ -39,8 +39,10 @@ export class FetchApi {
         this.baseUrl = baseUrl
         this.tokenSource = tokenSource ?? undefined
         this.headers = new Headers(options?.headers)
-        this.options = { headers: this.headers, ...options?.options } ?? { headers: this.headers, ...defaultOptions }
-        this.convertToFormData = (!!options && 'convertToFormData' in options) ? options.convertToFormData : true
+        this.options = options?.options
+            ? { headers: this.headers, ...options?.options }
+            : { headers: this.headers, ...defaultOptions }
+        this.convertToFormData = !!options && 'convertToFormData' in options ? options.convertToFormData : true
     }
 
     private baseUrl: string
