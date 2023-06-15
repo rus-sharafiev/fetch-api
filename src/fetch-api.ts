@@ -21,7 +21,7 @@ export class FetchApi {
      * 
      * @example
      * ``` ts
-     *  const api = new Fwr('https://example.com', '/refresh-token', {
+     *  const api = new FetchApi('https://example.com', '/refresh-token', {
      *      headers: { Accept: 'application/json' },
      *      options: { mode: "no-cors" }
      *  }) 
@@ -62,7 +62,7 @@ export class FetchApi {
 
             // Check whether body has files and convert to formdata if it is 
             const data = body as { [i: string]: unknown }
-            const hasFile = Object.values(data).find(el => el instanceof File)
+            const hasFile = Object.values(data).find(el => el instanceof File || FileList)
 
             if (hasFile) {
                 body = this.toFormData(data)
@@ -100,10 +100,11 @@ export class FetchApi {
     /**
      * Request interceptor with token update function
      * 
-     * @param   method  Original request method
-     * @param   url     Original URL
-     * @param   payload Original payload
-     * @returns Original request
+     * @param   response    Original response (used to return original error)
+     * @param   method      Original request method
+     * @param   url         Original URL
+     * @param   payload     Original payload
+     * @returns             Original request
      */
     private async refreshToken(response: Response, url: string, method: 'GET' | 'POST' | 'PATCH' | 'DELETE', body?: unknown) {
         if (this.tokenSource) {
@@ -263,7 +264,7 @@ export class FetchApi {
     // --------------- RTK baseQuery -----------------------------------------------------------------
 
     /**
-     * fwr-based `baseQuery` utility
+     * FetchApi-based `baseQuery` utility
      * 
      * @param args `baseQuery` args
      * @returns `FetchBaseQueryResult`
@@ -283,7 +284,7 @@ export default FetchApi
 
 // Types --------------------------------------------------------------------------
 
-// fwr
+// FetchApi
 export interface FetchApiError {
     status: number,
     message: string
