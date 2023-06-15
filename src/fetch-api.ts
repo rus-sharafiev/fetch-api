@@ -58,24 +58,25 @@ export class FetchApi {
      */
     async fetch({ url, method = 'GET', body, refresh = true, ...args }: FetchApiArgs): Promise<unknown> {
 
-        if (body && this.convertToFormData) {
 
-            // Check whether body has files and convert to formdata if it is 
-            const data = body as { [i: string]: unknown }
-            const hasFile = Object.values(data).find(el => el instanceof File || FileList)
+        // Remove Content-Type header and skip FormData converter if body is FormData
+        if (body instanceof FormData)
+            this.headers.delete("Content-Type")
+        else {
+            if (body && this.convertToFormData) {
 
-            if (hasFile) {
-                body = this.toFormData(data)
-                this.headers.delete("Content-Type")
-            } else {
-                this.headers.set("Content-Type", "application/json")
+                // Check whether body has files or file list and convert to formdata if it has 
+                const data = body as { [i: string]: unknown }
+                const hasFile = Object.values(data).find(el => el instanceof File || FileList)
+
+                if (hasFile) {
+                    body = this.toFormData(data)
+                    this.headers.delete("Content-Type")
+                } else {
+                    this.headers.set("Content-Type", "application/json")
+                }
+
             }
-
-        } else {
-
-            // Remove Content-Type header if body is FormData
-            if (body instanceof FormData)
-                this.headers.delete("Content-Type")
             else
                 this.headers.set("Content-Type", "application/json")
         }
