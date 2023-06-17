@@ -19,7 +19,7 @@ export class FetchApi {
      *
      * @example
      * ``` ts
-     *  const api = new Fwr('https://example.com', '/refresh-token', {
+     *  const api = new FetchApi('https://example.com', '/refresh-token', {
      *      headers: { Accept: 'application/json' },
      *      options: { mode: "no-cors" }
      *  })
@@ -29,12 +29,16 @@ export class FetchApi {
         this.baseUrl = baseUrl;
         this.tokenSource = tokenSource ?? undefined;
         this.headers = new Headers(options?.headers);
-        this.options = { headers: this.headers, ...options?.options } ?? { headers: this.headers, ...defaultOptions };
+        this.options = options?.options
+            ? { headers: this.headers, ...options?.options }
+            : { headers: this.headers, ...defaultOptions };
+        this.convertToFormData = !!options && 'convertToFormData' in options ? options.convertToFormData : true;
     }
     baseUrl;
     tokenSource;
     headers;
     options;
+    convertToFormData;
     /**
      * Use object with args to fetch query
      *
@@ -42,10 +46,25 @@ export class FetchApi {
      * @returns Promise which resolves with the result of parsing the body text as JSON
      */
     async fetch({ url, method = 'GET', body, refresh = true, ...args }) {
+        // Remove Content-Type header and skip FormData converter if body is FormData
         if (body instanceof FormData)
             this.headers.delete("Content-Type");
-        else
-            this.headers.set("Content-Type", "application/json");
+        else {
+            if (body && this.convertToFormData) {
+                // Check whether body has files or file list and convert to formdata if it has 
+                const data = body;
+                const hasFile = Object.values(data).find(el => el instanceof File || FileList);
+                if (hasFile) {
+                    body = this.toFormData(data);
+                    this.headers.delete("Content-Type");
+                }
+                else {
+                    this.headers.set("Content-Type", "application/json");
+                }
+            }
+            else
+                this.headers.set("Content-Type", "application/json");
+        }
         if (method === 'PATCH' || method === 'POST')
             args = { ...args, method, body: body instanceof FormData ? body : JSON.stringify(body ?? {}) };
         let response = await fetch(this.baseUrl + url, { method, ...this.options, ...args });
@@ -53,20 +72,20 @@ export class FetchApi {
             return response.json();
         }
         if (response.status === 401 && refresh) {
-            if (this.tokenSource)
-                return this.refreshToken(url, method ?? 'GET', body);
+            return this.refreshToken(response, url, method ?? 'GET', body);
         }
         return this.error(response);
     }
     /**
      * Request interceptor with token update function
      *
-     * @param   method  Original request method
-     * @param   url     Original URL
-     * @param   payload Original payload
-     * @returns Original request
+     * @param   response    Original response (used to return original error)
+     * @param   method      Original request method
+     * @param   url         Original URL
+     * @param   payload     Original payload
+     * @returns             Original request
      */
-    async refreshToken(url, method, body) {
+    async refreshToken(response, url, method, body) {
         if (this.tokenSource) {
             let token = undefined;
             try {
@@ -76,7 +95,7 @@ export class FetchApi {
                     token = await this.tokenSource();
             }
             catch (e) {
-                throw { message: 'Failed to get token' };
+                return this.error(response);
             }
             if (token) {
                 this.headers.set('Authorization', `Bearer ${token.accessToken}`);
@@ -86,7 +105,7 @@ export class FetchApi {
         }
         else {
             localStorage.removeItem('accessToken');
-            throw { message: 'Failed to refresh token' };
+            return this.error(response);
         }
     }
     /**
@@ -120,6 +139,40 @@ export class FetchApi {
             message: err.message,
             errors: err.errors
         };
+    }
+    /**
+     * Method converts JSON object with files to `FormData` with files and `serialized-json` field with the rest object
+     *
+     * @param data JSON object
+     * @returns FormData
+     */
+    toFormData(data) {
+        const formDataWithFiles = new FormData();
+        let jsonData = {};
+        for (const key in data) {
+            if (data[key] instanceof File) {
+                formDataWithFiles.append(key, data[key]);
+            }
+            else if (data[key] instanceof FileList) {
+                const fileList = data[key];
+                Array.from(fileList).forEach((file) => formDataWithFiles.append(key, file));
+            }
+            else if (data[key] instanceof Array) {
+                const arr = data[key];
+                const hasFile = arr.find(el => el instanceof File);
+                if (hasFile)
+                    arr.forEach((file) => formDataWithFiles.append(key, file));
+                else
+                    jsonData = { ...jsonData, [key]: data[key] };
+            }
+            else {
+                jsonData = { ...jsonData, [key]: data[key] };
+            }
+        }
+        const formData = new FormData();
+        formData.append('serialized-json', JSON.stringify(jsonData));
+        formDataWithFiles.forEach((value, key) => formData.append(key, value));
+        return formData;
     }
     // --------------- Shorthands --------------------------------------------------------------------
     /**
@@ -166,8 +219,9 @@ export class FetchApi {
             url, method: 'DELETE'
         });
     }
+    // --------------- RTK baseQuery -----------------------------------------------------------------
     /**
-     * fwr-based `baseQuery` utility
+     * FetchApi-based `baseQuery` utility
      *
      * @param args `baseQuery` args
      * @returns `FetchBaseQueryResult`

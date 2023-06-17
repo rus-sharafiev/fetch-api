@@ -13,7 +13,7 @@ export declare class FetchApi {
      *
      * @example
      * ``` ts
-     *  const api = new Fwr('https://example.com', '/refresh-token', {
+     *  const api = new FetchApi('https://example.com', '/refresh-token', {
      *      headers: { Accept: 'application/json' },
      *      options: { mode: "no-cors" }
      *  })
@@ -22,11 +22,13 @@ export declare class FetchApi {
     constructor(baseUrl: string, tokenSource?: (() => Promise<AccessTokenPayload>) | string, options?: {
         headers?: HeadersInit;
         options?: RequestInit;
+        convertToFormData: boolean;
     });
     private baseUrl;
     private tokenSource;
     private headers;
     private options;
+    private convertToFormData;
     /**
      * Use object with args to fetch query
      *
@@ -37,10 +39,11 @@ export declare class FetchApi {
     /**
      * Request interceptor with token update function
      *
-     * @param   method  Original request method
-     * @param   url     Original URL
-     * @param   payload Original payload
-     * @returns Original request
+     * @param   response    Original response (used to return original error)
+     * @param   method      Original request method
+     * @param   url         Original URL
+     * @param   payload     Original payload
+     * @returns             Original request
      */
     private refreshToken;
     /**
@@ -60,6 +63,13 @@ export declare class FetchApi {
      * @returns Error object with response status and resolved error message from server
      */
     private error;
+    /**
+     * Method converts JSON object with files to `FormData` with files and `serialized-json` field with the rest object
+     *
+     * @param data JSON object
+     * @returns FormData
+     */
+    private toFormData;
     /**
      * GET data from resource
      *
@@ -91,7 +101,7 @@ export declare class FetchApi {
      */
     delete(url: string): Promise<unknown>;
     /**
-     * fwr-based `baseQuery` utility
+     * FetchApi-based `baseQuery` utility
      *
      * @param args `baseQuery` args
      * @returns `FetchBaseQueryResult`
