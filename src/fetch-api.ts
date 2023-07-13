@@ -69,7 +69,7 @@ export class FetchApi {
 
                 // Check whether body has files or file list and convert to formdata if it has 
                 const data = body as { [i: string]: unknown }
-                const hasFile = Object.values(data).find(el => el instanceof File || FileList)
+                const hasFile = Object.values(data).find(el => el instanceof File || el instanceof FileList)
 
                 if (hasFile) {
                     body = this.toFormData(data)

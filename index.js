@@ -53,7 +53,7 @@ export class FetchApi {
             if (body && this.convertToFormData) {
                 // Check whether body has files or file list and convert to formdata if it has 
                 const data = body;
-                const hasFile = Object.values(data).find(el => el instanceof File || FileList);
+                const hasFile = Object.values(data).find(el => el instanceof File || el instanceof FileList);
                 if (hasFile) {
                     body = this.toFormData(data);
                     this.headers.delete("Content-Type");
