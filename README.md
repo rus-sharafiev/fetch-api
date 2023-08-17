@@ -1,6 +1,12 @@
 # Fetch with access token refresh
 
-A simple wrapper around the Fetch API with build in access token refresh on 401 response status
+[![npm](https://img.shields.io/npm/v/%40russh%2Ffetch-api)](https://npm.im/@russh/fetch-api)
+
+A simple wrapper around the Fetch API with 
+- Access token refresh on 401 response status
+- Shorthands
+- RTK baseQuery
+- JSON to FormData converter (requires custom middleware on backend)
 
 ## Install
 
@@ -10,7 +16,7 @@ npm i @russh/fetch-api
 
 ## Usage
 
-First create an instance of the Fwr class with a base URL and optionally a path name to refresh the access token.
+First create an instance of the FetchApi class with a base URL and optionally a path name to refresh the access token.
 ```ts
 const api = new FetchApi('https://example.com', '/refresh-token')
 ```
@@ -26,7 +32,7 @@ await api.post('/path', { foo: 'bar' })
 await api.patch('/path/id', { foo: 'bar' })
 await api.delete('/path/id')
 ```
-The instance is also contains fetch-api based RTK baseQuery
+The instance also contains fetch-api based RTK baseQuery
 
 ```ts
 export const apiName = createApi({
