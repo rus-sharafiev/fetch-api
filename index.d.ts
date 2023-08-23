@@ -15,14 +15,15 @@ export declare class FetchApi {
      * ``` ts
      *  const api = new FetchApi('https://example.com', '/refresh-token', {
      *      headers: { Accept: 'application/json' },
-     *      options: { mode: "no-cors" }
+     *      options: { mode: "no-cors" },
+     *      convertToFormData: true
      *  })
      * ```
      */
     constructor(baseUrl: string, tokenSource?: (() => Promise<AccessTokenPayload>) | string, options?: {
         headers?: HeadersInit;
         options?: RequestInit;
-        convertToFormData: boolean;
+        convertToFormData?: boolean;
     });
     private baseUrl;
     private tokenSource;
@@ -47,7 +48,7 @@ export declare class FetchApi {
      */
     private refreshToken;
     /**
-     * Add token from  and fingerprint to the "Authorization" header
+     * Add token and fingerprint to the "Authorization" header
      * Used to prepare the `Api` when the application is loaded
      */
     setAuthHeader(fingerprint?: string): void;
@@ -112,7 +113,7 @@ export default FetchApi;
 export interface FetchApiError {
     status: number;
     message: string;
-    errors?: object;
+    fields?: object;
 }
 export interface FetchApiArgs {
     url: string;

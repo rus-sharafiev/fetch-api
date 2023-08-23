@@ -23,7 +23,8 @@ export class FetchApi {
      * ``` ts
      *  const api = new FetchApi('https://example.com', '/refresh-token', {
      *      headers: { Accept: 'application/json' },
-     *      options: { mode: "no-cors" }
+     *      options: { mode: "no-cors" },
+     *      convertToFormData: true
      *  }) 
      * ```
      */
@@ -33,7 +34,7 @@ export class FetchApi {
         options?: {
             headers?: HeadersInit,
             options?: RequestInit,
-            convertToFormData: boolean
+            convertToFormData?: boolean
         }
     ) {
         this.baseUrl = baseUrl
@@ -42,7 +43,7 @@ export class FetchApi {
         this.options = options?.options
             ? { headers: this.headers, ...options?.options }
             : { headers: this.headers, ...defaultOptions }
-        this.convertToFormData = !!options && 'convertToFormData' in options ? options.convertToFormData : true
+        this.convertToFormData = !!options && 'convertToFormData' in options ? !!options.convertToFormData : false
     }
 
     private baseUrl: string
@@ -137,7 +138,7 @@ export class FetchApi {
     }
 
     /**
-     * Add token from  and fingerprint to the "Authorization" header
+     * Add token and fingerprint to the "Authorization" header
      * Used to prepare the `Api` when the application is loaded
      */
     setAuthHeader(fingerprint?: string) {
@@ -167,7 +168,7 @@ export class FetchApi {
         throw {
             status: res.status,
             message: err.message,
-            errors: err.errors
+            fields: err.fields
         }
     }
 
@@ -291,7 +292,7 @@ export default FetchApi
 export interface FetchApiError {
     status: number,
     message: string
-    errors?: object
+    fields?: object
 }
 
 export interface FetchApiArgs {
