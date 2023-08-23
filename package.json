@@ -1,6 +1,6 @@
 {
   "name": "@russh/fetch-api",
-  "version": "1.1.2",
+  "version": "1.1.3",
   "description": "Fetch with access token refresh",
   "main": "index.js",
   "scripts": {
