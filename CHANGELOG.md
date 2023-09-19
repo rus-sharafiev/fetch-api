@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.4 (2023-09-19)
+
+- **package:** source code has been removed
+
 ## 1.1.3 (2023-08-23)
 
 ### ⚠ BREAKING CHANGES
