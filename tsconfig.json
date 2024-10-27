@@ -1,15 +1,19 @@
 {
     "compilerOptions": {
+        "lib": [
+            "dom",
+            "dom.iterable",
+            "esnext"
+        ],
         "forceConsistentCasingInFileNames": true,
-        "moduleResolution": "nodenext",
         "strict": true,
         "allowJs": true,
         "declaration": true,
         "target": "ES2022",
-        "module": "ES2022",
-        "lib": [
-            "ES2022",
-            "DOM"
-        ]
-    }
+        "module": "esnext",
+        "moduleResolution": "bundler",
+    },
+    "include": [
+        "src/fetch-api.ts"
+    ],
 }

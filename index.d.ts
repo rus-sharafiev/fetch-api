@@ -1,3 +1,10 @@
+interface Options {
+    baseUrl?: string;
+    tokenSource?: (() => Promise<AccessTokenPayload>) | string;
+    headers?: HeadersInit;
+    options?: RequestInit;
+    convertToFormData?: boolean;
+}
 /**
  * A simple wrapper around the Fetch API
  *
@@ -20,7 +27,7 @@ export declare class FetchApi {
      *  })
      * ```
      */
-    constructor(baseUrl: string, tokenSource?: (() => Promise<AccessTokenPayload>) | string, options?: {
+    constructor(baseUrl?: string | Options, tokenSource?: (() => Promise<AccessTokenPayload>) | string, options?: {
         headers?: HeadersInit;
         options?: RequestInit;
         convertToFormData?: boolean;

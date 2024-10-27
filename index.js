@@ -27,13 +27,31 @@ export class FetchApi {
      * ```
      */
     constructor(baseUrl, tokenSource, options) {
-        this.baseUrl = baseUrl;
-        this.tokenSource = tokenSource ?? undefined;
-        this.headers = new Headers(options?.headers);
-        this.options = options?.options
-            ? { headers: this.headers, ...options?.options }
-            : { headers: this.headers, ...defaultOptions };
-        this.convertToFormData = !!options && 'convertToFormData' in options ? !!options.convertToFormData : false;
+        if (typeof baseUrl === 'string') {
+            this.baseUrl = baseUrl;
+            this.tokenSource = tokenSource ?? undefined;
+            this.headers = new Headers(options?.headers);
+            this.options = options?.options
+                ? { headers: this.headers, ...options?.options }
+                : { headers: this.headers, ...defaultOptions };
+            this.convertToFormData = !!options && 'convertToFormData' in options ? !!options.convertToFormData : false;
+        }
+        else if (baseUrl) {
+            const { baseUrl: url = '/', headers, options, tokenSource, convertToFormData } = baseUrl;
+            this.baseUrl = url;
+            this.tokenSource = tokenSource ?? undefined;
+            this.headers = new Headers(headers);
+            this.options = options
+                ? { headers: this.headers, ...options }
+                : { headers: this.headers, ...defaultOptions };
+            this.convertToFormData = convertToFormData ?? false;
+        }
+        else {
+            this.baseUrl = '/';
+            this.convertToFormData = false;
+            this.headers = new Headers();
+            this.options = { headers: this.headers, ...defaultOptions };
+        }
     }
     baseUrl;
     tokenSource;

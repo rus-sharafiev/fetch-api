@@ -5,6 +5,14 @@ const defaultOptions: RequestInit = {
     mode: "cors",
 }
 
+interface Options {
+    baseUrl?: string,
+    tokenSource?: (() => Promise<AccessTokenPayload>) | string,
+    headers?: HeadersInit,
+    options?: RequestInit,
+    convertToFormData?: boolean
+}
+
 /**
  * A simple wrapper around the Fetch API
  * 
@@ -29,7 +37,7 @@ export class FetchApi {
      * ```
      */
     constructor(
-        baseUrl: string,
+        baseUrl?: string | Options,
         tokenSource?: (() => Promise<AccessTokenPayload>) | string,
         options?: {
             headers?: HeadersInit,
@@ -37,18 +45,38 @@ export class FetchApi {
             convertToFormData?: boolean
         }
     ) {
-        this.baseUrl = baseUrl
-        this.tokenSource = tokenSource ?? undefined
-        this.headers = new Headers(options?.headers)
-        this.options = options?.options
-            ? { headers: this.headers, ...options?.options }
-            : { headers: this.headers, ...defaultOptions }
-        this.convertToFormData = !!options && 'convertToFormData' in options ? !!options.convertToFormData : false
+        if (typeof baseUrl === 'string') {
+
+            this.baseUrl = baseUrl
+            this.tokenSource = tokenSource ?? undefined
+            this.headers = new Headers(options?.headers)
+            this.options = options?.options
+                ? { headers: this.headers, ...options?.options }
+                : { headers: this.headers, ...defaultOptions }
+            this.convertToFormData = !!options && 'convertToFormData' in options ? !!options.convertToFormData : false
+
+        } else if (baseUrl) {
+
+            const { baseUrl: url = '/', headers, options, tokenSource, convertToFormData } = baseUrl
+            this.baseUrl = url
+            this.tokenSource = tokenSource ?? undefined
+            this.headers = new Headers(headers)
+            this.options = options
+                ? { headers: this.headers, ...options }
+                : { headers: this.headers, ...defaultOptions }
+            this.convertToFormData = convertToFormData ?? false
+
+        } else {
+
+            this.baseUrl = '/'
+            this.convertToFormData = false
+            this.headers = new Headers()
+            this.options = { headers: this.headers, ...defaultOptions }
+        }
     }
 
     private baseUrl: string
     private tokenSource: string | (() => Promise<AccessTokenPayload>) | undefined
-
     private headers: Headers
     private options: RequestInit
     private convertToFormData: boolean
@@ -60,7 +88,6 @@ export class FetchApi {
      * @returns Promise which resolves with the result of parsing the body text as JSON
      */
     async fetch({ url, method = 'GET', body, refresh = true, ...args }: FetchApiArgs): Promise<unknown> {
-
 
         // Remove Content-Type header and skip FormData converter if body is FormData
         if (body instanceof FormData)
